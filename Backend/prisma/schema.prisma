@@ -1,0 +1,78 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 Int      @id @default(autoincrement())
+  email              String   @unique
+  password           String
+  nome               String
+  cognome            String
+  username           String
+  telefono           String?
+  indirizzo          String?
+  immagine           String?
+  ruolo              Role     @default(USER)
+  stato              Status   @default(OFFLINE)
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  conversationsAsUser1 Conversation[] @relation("User1Conversations")
+  conversationsAsUser2 Conversation[] @relation("User2Conversations")
+  messages             Message[]
+}
+
+model Conversation {
+  id        Int      @id @default(autoincrement())
+  user1Id   Int
+  user2Id   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user1    User      @relation("User1Conversations", fields: [user1Id], references: [id])
+  user2    User      @relation("User2Conversations", fields: [user2Id], references: [id])
+  messages Message[]
+
+  @@unique([user1Id, user2Id])
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  senderId       Int
+  conversationId Int
+
+  sender       User         @relation(fields: [senderId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model RegistrationRequest {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  nome      String
+  cognome   String
+  username  String
+  telefono  String?
+  indirizzo String?
+  immagine  String?
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Status {
+  ONLINE
+  AWAY
+  OFFLINE
+}
